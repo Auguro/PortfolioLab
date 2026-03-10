@@ -10,7 +10,7 @@ interface Props {
     dataFim: string;
     aporteInicial: number;
     aportesMensal: number;
-  }) => void;
+  }) => Promise<void>;
 }
 
 export default function PainelConfiguracoes({ tickers, onSimular }: Props) {

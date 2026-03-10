@@ -1,10 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { simular as executarSimulacao, ResultadoSimulacao } from "../lib/simular";
+import { useEffect, useRef } from "react";
+import { executarPython } from "../lib/Utils";
+
 import Cabecalho from "./Cabecalho";
 import PainelConfiguracoes from "./PainelConfiguracoes";
 import PainelEditores from "./PainelEditores";
-import { simular as executarSimulacao, ResultadoSimulacao } from "../lib/simular";
+
+//codigos
+import { codigoCDI } from "../estrategias/cdi.ts";
+import { codigoParidade } from "../estrategias/paridade.ts";
+import { codigoEficiente } from "../estrategias/eficiente.ts";
 
 interface Props {
   tickers: string[];
@@ -16,26 +24,65 @@ export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
   const [painelAberto, setPainelAberto] = useState(false);
   const [resultado, setResultado] = useState<ResultadoSimulacao | null>(null);
   const [codigos, setCodigos] = useState({
-    paridade: `function paridadeDeRisco(dados, aporteInicial, aportesMensal) {\n  // Edite sua estratégia aqui\n}`,
-    eficiente: `function carteiraEficiente(dados, aporteInicial, aportesMensal) {\n  // Edite sua estratégia aqui\n}`,
-    cdi: `function cdi(dados, aporteInicial, aportesMensal) {\n  // Edite sua estratégia aqui\n}`,
+    paridade: codigoParidade,
+    eficiente: codigoEficiente,
+    cdi: codigoCDI,
   });
 
-  function simular(config: {
+  const pyodideRef = useRef<any>(null);
+
+  useEffect(() => {
+    async function carregarPyodide() {
+      const pyodide = await (window as any).loadPyodide({
+        indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.0/full/"
+      });
+      await pyodide.loadPackage(["numpy", "scipy", "pandas"]);
+      pyodideRef.current = pyodide;
+      console.log("Pyodide carregado!");
+    }
+    carregarPyodide();
+  }, []);
+
+  async function simular(config: {
     tickers: string[];
     dataInicio: string;
     dataFim: string;
     aporteInicial: number;
     aportesMensal: number;
   }) {
-    const res = executarSimulacao(
-      { ...config, estrategias: { cdi: true, paridade: false } },
-      dados,
-      cdi
-    );
-    setResultado(res);
-    console.log("CDI:", res.cdi?.length, "dias");
-    console.log("Último valor CDI:", res.cdi?.[res.cdi.length - 1]);
+    if (!pyodideRef.current) {
+      console.log("Pyodide ainda carregando...");
+      return;
+    }
+
+    const variaveis = {
+      dados_ativos: dados,
+      dados_cdi: cdi,
+      tickers: config.tickers,
+      data_inicio: config.dataInicio,
+      data_fim: config.dataFim,
+      aporte_inicial: config.aporteInicial,
+      aporte_mensal: config.aportesMensal,
+    };
+
+    try {
+      const resultadoCDI = await executarPython(
+        pyodideRef.current,
+        codigos.cdi,
+        variaveis
+      );
+      console.log("CDI:", resultadoCDI.length, "dias");
+
+      const resultadoParidade = await executarPython(
+        pyodideRef.current,
+        codigos.paridade,
+        variaveis
+      );
+      console.log("Paridade:", resultadoParidade.length, "dias");
+      console.log("Último valor Paridade:", resultadoParidade[resultadoParidade.length - 1]);
+    } catch (e) {
+      console.error("Erro ao executar Python:", e);
+    }
   }
 
   return (

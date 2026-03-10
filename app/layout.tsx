@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Paridade de Risco · B3",
-  description: "Comparação entre Paridade de Risco e Portfólio Eficiente no mercado brasileiro",
+  title: "Portfolio Lab · B3",
+  description: "Comparação entre estratégias de Portfólios no mercado brasileiro",
 };
 
 export default function RootLayout({
@@ -13,6 +13,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
+      <head>
+        <script src="https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js" async />
+      </head>
       <body>
         {children}
       </body>
