@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 
 export function lerCSV(): Record<string, string>[] {
-  const caminhoArquivo = path.join(process.cwd(), "dados", "Dados_Ativos_B3_AdjClose.csv");
+  const caminhoArquivo = path.join(process.cwd(), "public", "dados", "Dados_Ativos_B3_AdjClose.csv");
   const conteudo = fs.readFileSync(caminhoArquivo, "utf-8");
   
   const resultado = Papa.parse<Record<string, string>>(conteudo, {
@@ -15,7 +15,7 @@ export function lerCSV(): Record<string, string>[] {
 }
 
 export function lerCDI(): Record<string, string>[] {
-  const caminhoArquivo = path.join(process.cwd(), "dados", "cdi_data_total.csv");
+  const caminhoArquivo = path.join(process.cwd(), "public", "dados", "cdi_data_total.csv");
   const conteudo = fs.readFileSync(caminhoArquivo, "utf-8");
   
   const resultado = Papa.parse<Record<string, string>>(conteudo, {

@@ -146,7 +146,17 @@ export default function Grafico({ dados, config }: Props) {
         <ResponsiveContainer>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--borda)" />
-            <XAxis dataKey="data" stroke="var(--texto-suave)" />
+            <XAxis
+              dataKey="data"
+              stroke="var(--texto-suave)"
+              tickFormatter={(value) => {
+                // value no formato "YYYY-MM-DD"
+                const [ano, mes] = value.split('-');     // ignoramos o dia
+                const data = new Date(ano, mes - 1, 1);  // cria data com o mês correto
+                // Exibe "mmm/aa" (inglês) – ex: "May/22"
+                return data.toLocaleString('en', { month: 'short' }) + '/' + ano.slice(-2);
+              }}
+            />
             <YAxis stroke="var(--texto-suave)" />
             <Tooltip
               contentStyle={{ background: "var(--fundo-card)", borderColor: "var(--borda)" }}
