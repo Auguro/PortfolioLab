@@ -7,6 +7,8 @@ interface Props {
   setPainelAberto: (valor: boolean) => void;
   codigos: { paridade: string; eficiente: string; cdi: string };
   setCodigos: (codigos: { paridade: string; eficiente: string; cdi: string }) => void;
+  marcados: string[];
+  setMarcados: (valor: string[]) => void;
 }
 
 const ESTRATEGIAS = [
@@ -15,16 +17,16 @@ const ESTRATEGIAS = [
     titulo: "Paridade de Risco"
   },
   {
-    id: "eficiente",
-    titulo: "Carteira Eficiente"
-  },
-  {
     id: "cdi",
     titulo: "CDI"
   },
+  {
+    id: "eficiente",
+    titulo: "Carteira Eficiente"
+  }
 ];
 
-export default function PainelEditores({ aberto, setPainelAberto, codigos, setCodigos }: Props) {
+export default function PainelEditores({ aberto, setPainelAberto, codigos, setCodigos, marcados, setMarcados }: Props) {
   const [abertos, setAbertos] = useState<string[]>([]);
 
   function toggleEditor(id: string) {
@@ -75,26 +77,45 @@ export default function PainelEditores({ aberto, setPainelAberto, codigos, setCo
 
       {ESTRATEGIAS.map((estrategia) => (
         <div key={estrategia.id} style={{ border: "1px solid var(--borda)", borderRadius: "6px", overflow: "hidden" }}>
-          <button
-            onClick={() => toggleEditor(estrategia.id)}
-            style={{
-              width: "100%",
-              padding: "12px",
-              background: "var(--fundo)",
-              border: "none",
-              cursor: "pointer",
-              color: "var(--texto)",
-              fontSize: "13px",
-              fontWeight: "bold",
-              textAlign: "left",
-              display: "flex",
-              justifyContent: "space-between"
-            }}
-          >
-            {estrategia.titulo}
-            <span>{abertos.includes(estrategia.id) ? "▲" : "▼"}</span>
-          </button>
-
+          <div style={{ display: "flex", alignItems: "center"}}>
+            
+            <div className="checkbox-wrapper-6">
+              <input
+                className="tgl tgl-light"
+                id={`cb-${estrategia.id}`}
+                type="checkbox"
+                checked={marcados.includes(estrategia.id)}
+                onChange={() => {
+                  if (marcados.includes(estrategia.id)) {
+                    setMarcados(marcados.filter((m) => m !== estrategia.id));
+                  } else {
+                    setMarcados([...marcados, estrategia.id]);
+                  }
+                }}
+              />
+              <label className="tgl-btn" htmlFor={`cb-${estrategia.id}`} />
+            </div>
+            
+            <button
+              onClick={() => toggleEditor(estrategia.id)}
+              style={{
+                width: "100%",
+                padding: "12px",
+                background: "var(--fundo)",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--texto)",
+                fontSize: "13px",
+                fontWeight: "bold",
+                textAlign: "left",
+                display: "flex",
+                justifyContent: "space-between"
+              }}
+            >
+              {estrategia.titulo}
+              <span>{abertos.includes(estrategia.id) ? "▲" : "▼"}</span>
+            </button>
+          </div>
           {abertos.includes(estrategia.id) && (
             <textarea
               value={codigos[estrategia.id as keyof typeof codigos]}

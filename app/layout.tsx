@@ -14,7 +14,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <head>
-        <script src="https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.js" async />
+        <script src="https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js" async />
       </head>
       <body>
         {children}

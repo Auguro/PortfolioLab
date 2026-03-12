@@ -3,6 +3,8 @@
 import { useState } from "react";
 
 interface Props {
+  modo: string;
+  setModo: (valor: "aportes" | "rentabilidade") => void;
   tickers: string[];
   onSimular: (config: {
     tickers: string[];
@@ -13,13 +15,12 @@ interface Props {
   }) => Promise<void>;
 }
 
-export default function PainelConfiguracoes({ tickers, onSimular }: Props) {
+export default function PainelConfiguracoes({ tickers, onSimular, modo, setModo }: Props) {
   const [aporteInicial, setAporteInicial] = useState(1000);
   const [aportesMensal, setAporteMensal] = useState(400);
   const [tickersSelecionados, setTickersSelecionados] = useState<string[]>([]);
-  const [dataInicio, setDataInicio] = useState("2019-01-02");
-  const [dataFim, setDataFim] = useState("2025-03-01");
-  const [modo, setModo] = useState<"aportes" | "volatilidade">("aportes");
+  const [dataInicio, setDataInicio] = useState("2018-01-03");
+  const [dataFim, setDataFim] = useState("2025-06-10");
 
   function toggleTicker(ticker: string) {
     if (tickersSelecionados.includes(ticker)) {
@@ -50,65 +51,67 @@ export default function PainelConfiguracoes({ tickers, onSimular }: Props) {
           Aportes
         </button>
         <button
-          onClick={() => setModo("volatilidade")}
+          onClick={() => setModo("rentabilidade")}
           style={{
             flex: 1,
             padding: "10px",
-            background: modo === "volatilidade" ? "var(--fundo-card)" : "var(--fundo)",
+            background: modo === "rentabilidade" ? "var(--fundo-card)" : "var(--fundo)",
             border: "none",
-            borderBottom: modo === "volatilidade" ? "2px solid var(--verde)" : "2px solid transparent",
-            color: modo === "volatilidade" ? "var(--verde)" : "var(--texto-suave)",
+            borderBottom: modo === "rentabilidade" ? "2px solid var(--verde)" : "2px solid transparent",
+            color: modo === "rentabilidade" ? "var(--verde)" : "var(--texto-suave)",
             fontSize: "12px",
             fontWeight: "bold",
             cursor: "pointer",
           }}
         >
-          Volatilidade
+          rentabilidade
         </button>
       </div>
 
       {/* Campos */}
       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-        <div>
-          <p style={{ color: "var(--texto-suave)", fontSize: "11px", marginBottom: "8px" }}>
-            DATA INÍCIO
-          </p>
-          <input
-            type="date"
-            value={dataInicio}
-            onChange={(e) => setDataInicio(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              background: "var(--fundo)",
-              border: "1px solid var(--borda)",
-              borderRadius: "6px",
-              color: "var(--texto)",
-              fontSize: "14px"
-            }}
-          />
-        </div>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <div>
+            <p style={{ color: "var(--texto-suave)", fontSize: "11px", marginBottom: "8px" }}>
+              DATA INÍCIO
+            </p>
+            <input
+              type="date"
+              value={dataInicio}
+              onChange={(e) => setDataInicio(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                background: "var(--fundo)",
+                border: "1px solid var(--borda)",
+                borderRadius: "6px",
+                color: "var(--texto)",
+                fontSize: "14px"
+              }}
+            />
+          </div>
 
-        <div>
-          <p style={{ color: "var(--texto-suave)", fontSize: "11px", marginBottom: "8px" }}>
-            DATA FIM
-          </p>
-          <input
-            type="date"
-            value={dataFim}
-            onChange={(e) => setDataFim(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              background: "var(--fundo)",
-              border: "1px solid var(--borda)",
-              borderRadius: "6px",
-              color: "var(--texto)",
-              fontSize: "14px"
-            }}
-          />
+          <div>
+            <p style={{ color: "var(--texto-suave)", fontSize: "11px", marginBottom: "8px" }}>
+              DATA FIM
+            </p>
+            <input
+              type="date"
+              value={dataFim}
+              onChange={(e) => setDataFim(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                background: "var(--fundo)",
+                border: "1px solid var(--borda)",
+                borderRadius: "6px",
+                color: "var(--texto)",
+                fontSize: "14px"
+              }}
+            />
+          </div>
         </div>
-
+        
         {/* Campos só do modo Aportes */}
         {modo === "aportes" && (
           <>
@@ -161,7 +164,7 @@ export default function PainelConfiguracoes({ tickers, onSimular }: Props) {
           <div style={{
             display: "flex",
             flexWrap: "wrap",
-            gap: "6px",
+            gap: "3px",
             maxHeight: "300px",
             overflowY: "auto",
             backgroundColor: "var(--fundo)"

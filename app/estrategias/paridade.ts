@@ -2,7 +2,7 @@ export const codigoParidade = `import pandas as pd
 import numpy as np
 from scipy.optimize import minimize
 
-# Preparar dados
+# Preparar dados dos ativos
 df = pd.DataFrame(dados_ativos)
 df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y %H:%M:%S')
 
@@ -48,17 +48,32 @@ for month in pd.date_range(start=inicio, end=fim, freq='MS'):
     investment_datetime = investment_date.replace(hour=16, minute=56, second=0)
     one_year_before = investment_date - pd.DateOffset(years=1)
 
+    # Garantir que one_year_before não seja anterior ao primeiro dado disponível
+    first_date = df['Data'].min()
+    if one_year_before < first_date:
+        one_year_before = first_date
+
     yearly_data = df[(df['Data'] >= one_year_before) & (df['Data'] < investment_date)]
     yearly_dataaux = df[(df['Data'] >= one_year_before) & (df['Data'] <= investment_datetime)]
 
+    # Se não houver dados anuais suficientes, usa todos os dados disponíveis
     if len(yearly_data) < 2:
-        continue
+        yearly_data = df[df['Data'] < investment_date].copy()
+        yearly_dataaux = df[df['Data'] <= investment_datetime].copy()
+        if len(yearly_data) < 2:
+            continue
 
     returns = yearly_data[ativos].pct_change().dropna()
+    if returns.empty:
+        continue
+
     current_assets = ativos.copy()
     success = False
 
     for attempt in range(len(ativos)):
+        if len(current_assets) <= 1:
+            break
+
         current_returns = returns[current_assets]
         volatilities = current_returns.std() * (252 ** 0.5) * 100
 
@@ -71,6 +86,9 @@ for month in pd.date_range(start=inicio, end=fim, freq='MS'):
                 success = False
                 break
 
+        if len(current_assets) <= 1:
+            break
+
         current_returns = returns[current_assets]
         cov_matrix = current_returns.cov().values * 1e-2
 
@@ -79,6 +97,8 @@ for month in pd.date_range(start=inicio, end=fim, freq='MS'):
             success = True
             break
         except np.linalg.LinAlgError:
+            if len(current_assets) <= 1:
+                break
             volatilities = current_returns.std()
             min_vol_asset = volatilities.idxmin()
             if min_vol_asset in current_assets:
@@ -88,6 +108,28 @@ for month in pd.date_range(start=inicio, end=fim, freq='MS'):
                 break
 
     if not success:
+        # Se sobrou apenas um ativo, investe 100% nele
+        if len(current_assets) == 1:
+            only_asset = current_assets[0]
+            aporte = aporte_inicial if month == inicio else aporte_mensal
+            if yearly_dataaux.empty:
+                continue
+            current_price = yearly_dataaux.iloc[-1][only_asset]
+            if current_price > 0:
+                quantities[only_asset] += aporte / current_price
+
+            start_of_month = month
+            end_of_month = month + pd.offsets.MonthEnd(0)
+            # Limita até a data final
+            data_fim_periodo = min(end_of_month, fim)
+            daily_data = df[(df['Data'] >= start_of_month) & (df['Data'] <= data_fim_periodo)]
+            if not daily_data.empty:
+                for _, row in daily_data.iterrows():
+                    valor = sum(float(row[a]) * quantities[a] for a in ativos)
+                    resultado.append({"data": row['Data'].strftime('%Y-%m-%d'), "valor": float(valor)})
+        continue
+
+    if len(current_assets) < 2:
         continue
 
     cov_matrix = returns[current_assets].cov().values * 1e-2
@@ -97,6 +139,8 @@ for month in pd.date_range(start=inicio, end=fim, freq='MS'):
         continue
 
     aporte = aporte_inicial if month == inicio else aporte_mensal
+    if yearly_dataaux.empty:
+        continue
     current_prices = yearly_dataaux.iloc[-1][current_assets].to_dict()
 
     for i, asset in enumerate(current_assets):
@@ -106,10 +150,11 @@ for month in pd.date_range(start=inicio, end=fim, freq='MS'):
 
     start_of_month = month
     end_of_month = month + pd.offsets.MonthEnd(0)
-    daily_data = df[(df['Data'] >= start_of_month) & (df['Data'] <= end_of_month)]
+    # Limita até a data final
+    data_fim_periodo = min(end_of_month, fim)
+    daily_data = df[(df['Data'] >= start_of_month) & (df['Data'] <= data_fim_periodo)]
 
     if not daily_data.empty:
-        daily_prices = daily_data[ativos].ffill()
         for _, row in daily_data.iterrows():
             valor = sum(float(row[a]) * quantities[a] for a in ativos)
             resultado.append({"data": row['Data'].strftime('%Y-%m-%d'), "valor": float(valor)})

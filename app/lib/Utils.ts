@@ -18,7 +18,7 @@ export async function executarPython(
   }
   const resultado = await pyodide.runPythonAsync(codigoPython);
   return resultado.toJs({ create_proxies: false }).map((item: any) => ({
-    data: item.get("data"),
-    valor: item.get("valor"),
+    data: item.data,
+    valor: item.valor,
   }));
 }
