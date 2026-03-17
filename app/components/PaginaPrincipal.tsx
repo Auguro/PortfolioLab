@@ -1,16 +1,21 @@
 "use client";
 
+//react
 import { useState } from "react";
 import { useEffect, useRef } from "react";
-import { executarPython } from "../lib/Utils";
 
+//lib
+import { executarPython } from "../lib/Utils";
+import { getPyodide } from '../lib/pyodideLoader';
+
+//Components
 import Cabecalho from "./Cabecalho";
 import PainelConfiguracoes from "./PainelConfiguracoes";
 import PainelEditores from "./PainelEditores";
 import Grafico_aportes from "./Grafico";
 import Grafico_rentabilidade from "./Grafico - Rentabilidade";
 
-//codigos
+//estrategias
 import { codigoCDI } from "../estrategias/cdi";
 import { codigoParidade } from "../estrategias/paridade";
 import { codigoEficiente } from "../estrategias/eficiente";
@@ -65,15 +70,10 @@ export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
   const pyodideRef = useRef<any>(null);
 
   useEffect(() => {
-    async function carregarPyodide() {
-      const pyodide = await (window as any).loadPyodide({
-        indexURL: "https://cdn.jsdelivr.net/pyodide/v0.29.3/full/"
-      });
-      await pyodide.loadPackage(["numpy", "scipy", "pandas"]);
+    getPyodide().then((pyodide) => {
       pyodideRef.current = pyodide;
       console.log("Pyodide carregado!");
-    }
-    carregarPyodide();
+    });
   }, []);
 
   async function simular(config: {
