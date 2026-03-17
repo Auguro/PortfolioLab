@@ -67,7 +67,12 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = getSupabase();
-  const today = new Date().toISOString().split("T")[0];
+
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const todayStr = today.toISOString().split("T")[0];
+  const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
   let tickersOk = 0;
   let tickersErr = 0;
@@ -77,15 +82,21 @@ export async function GET(req: NextRequest) {
   for (const ticker of TICKERS_B3) {
     try {
       const result = await yahooFinance.historical(toYahooTicker(ticker), {
-        period1: today,
-        period2: today,
-      }) as any;
+        period1: todayStr,
+        period2: tomorrowStr,
+      }) as any[];
 
       const price = result[0]?.adjClose;
 
       if (!price || isNaN(price)) {
         throw new Error(`Preço inválido: ${price}`);
       }
+
+      rowsToInsert.push({
+        ticker,
+        date: todayStr,
+        close_price: Math.round(price * 10000) / 10000,
+      });
 
       tickersOk++;
     } catch (err: unknown) {
