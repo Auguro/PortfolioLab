@@ -15,7 +15,7 @@ export default function Cabecalho({ painelAberto, setPainelAberto }: Props) {
     }}>
       <div>
         <h1 style={{ color: "var(--verde)", fontSize: "18px", fontWeight: "bold" }}>
-          Paridade de Risco
+          Portfolio Lab
         </h1>
         <p style={{ color: "var(--texto-suave)", fontSize: "12px" }}>
           Mercado brasileiro · B3

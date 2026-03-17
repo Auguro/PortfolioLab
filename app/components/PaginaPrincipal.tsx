@@ -98,8 +98,6 @@ export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
       aporte_mensal: config.aportesMensal,
     };
 
-    console.log(codigos);
-
     try {
       const promessas = marcados.map((id) => ({
         id,

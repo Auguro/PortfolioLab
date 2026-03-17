@@ -92,3 +92,50 @@ body {
 .checkbox-wrapper-6 .tgl-light:checked + .tgl-btn {
   background: #39d353;
 }
+
+/* ===== RESPONSIVIDADE ===== */
+
+/* Estilos para telas menores que 1024px (tablet) */
+@media (max-width: 1024px) {
+  .painel-configuracoes {
+    display: none; /* escondemos a sidebar fixa */
+  }
+
+  .painel-configuracoes.mobile-aberto {
+    display: block;
+    position: fixed;
+    top: 57px; /* altura do cabeçalho */
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 57px);
+    background: var(--fundo-card);
+    z-index: 90;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  main {
+    width: 100%;
+    margin-left: 0 !important;
+    padding: 20px !important;
+  }
+}
+
+/* ===== CUSTOMIZAÇÃO DO INPUT DATE ===== */
+input[type="date"] {
+  color-scheme: dark; /* força o navegador a usar tema escuro nos controles */
+  background-color: var(--fundo) !important;
+  color: var(--texto) !important;
+  border: 1px solid var(--borda) !important;
+}
+
+/* Para navegadores baseados em WebKit (Chrome, Edge, Safari) */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* transforma o ícone escuro em claro */
+  cursor: pointer;
+}
+
+/* Para Firefox */
+input[type="date"]::-moz-calendar-picker-indicator {
+  filter: invert(1);
+}
