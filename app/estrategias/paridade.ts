@@ -41,6 +41,7 @@ def solve_paridade(cov_matrix, n):
 
 quantities = {ativo: 0.0 for ativo in ativos}
 resultado = []
+alocacao_mensal = []
 min_vol_threshold = 13
 
 for month in pd.date_range(start=inicio, end=fim, freq='MS'):
@@ -118,6 +119,13 @@ for month in pd.date_range(start=inicio, end=fim, freq='MS'):
             if current_price > 0:
                 quantities[only_asset] += aporte / current_price
 
+            pesos_ativos = {asset: 0.0 for asset in ativos}
+            pesos_ativos[only_asset] = 1.0
+            alocacao_mensal.append({
+                "data": investment_date.strftime('%Y-%m-%d'),
+                "pesos": pesos_ativos
+            })
+
             start_of_month = month
             end_of_month = month + pd.offsets.MonthEnd(0)
             # Limita até a data final
@@ -148,6 +156,14 @@ for month in pd.date_range(start=inicio, end=fim, freq='MS'):
         if price > 0:
             quantities[asset] += (aporte * optimal_x[i]) / price
 
+    pesos_ativos = {asset: 0.0 for asset in ativos}
+    for i, asset in enumerate(current_assets):
+        pesos_ativos[asset] = float(optimal_x[i])
+    alocacao_mensal.append({
+        "data": investment_date.strftime('%Y-%m-%d'),
+        "pesos": pesos_ativos
+    })
+
     start_of_month = month
     end_of_month = month + pd.offsets.MonthEnd(0)
     # Limita até a data final
@@ -159,4 +175,4 @@ for month in pd.date_range(start=inicio, end=fim, freq='MS'):
             valor = sum(float(row[a]) * quantities[a] for a in ativos)
             resultado.append({"data": row['Data'].strftime('%Y-%m-%d'), "valor": float(valor)})
 
-resultado`;
+(alocacao_mensal if ('modo_retorno' in globals() and modo_retorno == 'alocacao') else resultado)`;

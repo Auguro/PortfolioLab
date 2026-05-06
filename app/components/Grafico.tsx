@@ -112,8 +112,10 @@ export default function Grafico({ dados, config }: Props) {
           {/* Cards das estratégias marcadas */}
           {ESTRATEGIAS_CONFIG.map(({ id, label, cor }) => {
             const serie = dados[id as keyof typeof dados];
-            if (!serie) return null;
-            const valorFinal = serie[serie.length - 1].valor;
+            if (!serie || serie.length === 0) return null;
+            const ultimo = serie[serie.length - 1];
+            if (!ultimo || typeof ultimo.valor !== "number" || Number.isNaN(ultimo.valor)) return null;
+            const valorFinal = ultimo.valor;
             const retorno = calcularRetorno(serie, valorInvestido!);
             const positivo = retorno >= 0;
             return (

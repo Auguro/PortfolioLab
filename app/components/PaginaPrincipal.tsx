@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useEffect, useRef } from "react";
 
 //lib
-import { executarPython } from "../lib/Utils";
+import { executarPython, executarPythonBruto } from "../lib/Utils";
 import { getPyodide } from '../lib/pyodideLoader';
 
 //Components
@@ -14,6 +14,7 @@ import PainelConfiguracoes from "./PainelConfiguracoes";
 import PainelEditores from "./PainelEditores";
 import Grafico_aportes from "./Grafico";
 import Grafico_rentabilidade from "./Grafico - Rentabilidade";
+import GraficosParidade from "./GraficosParidade";
 
 //estrategias
 import { codigoCDI } from "../estrategias/cdi";
@@ -27,6 +28,27 @@ interface Props {
   tickers: string[];
   dados: Record<string, string>[];
   cdi: Record<string, string>[];
+}
+
+function normalizarAlocacao(raw: any): { data: string; pesos: Record<string, number> }[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item: any) => {
+    const data = item instanceof Map ? item.get("data") : item?.data;
+    const pesosRaw = item instanceof Map ? item.get("pesos") : item?.pesos;
+    const pesos: Record<string, number> = {};
+
+    if (pesosRaw instanceof Map) {
+      pesosRaw.forEach((v: any, k: any) => {
+        pesos[String(k)] = Number(v);
+      });
+    } else if (pesosRaw && typeof pesosRaw === "object") {
+      Object.entries(pesosRaw).forEach(([k, v]) => {
+        pesos[String(k)] = Number(v);
+      });
+    }
+
+    return { data: String(data ?? ""), pesos };
+  }).filter((p) => p.data);
 }
 
 export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
@@ -46,6 +68,7 @@ export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
     });
     // 🔽 LIMPA OS RESULTADOS ANTERIORES AO TROCAR DE MODO
     setResultados({ cdi: null, paridade: null, eficiente: null });
+    setAlocacaoParidade([]);
   }, [modo]);
 
   const [configSimulacao, setConfigSimulacao] = useState<{
@@ -66,6 +89,7 @@ export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
     paridade: null,
     eficiente: null,
   });
+  const [alocacaoParidade, setAlocacaoParidade] = useState<{ data: string; pesos: Record<string, number> }[]>([]);
 
   const pyodideRef = useRef<any>(null);
 
@@ -116,6 +140,13 @@ export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
         novoResultado[id as keyof typeof novoResultado] = resultados[i];
       });
 
+      if (modo === "aportes" && marcados.includes("paridade")) {
+        const rawAlocacao = await executarPythonBruto(pyodideRef.current, codigoParidade, { ...variaveis, modo_retorno: "alocacao" });
+        setAlocacaoParidade(normalizarAlocacao(rawAlocacao));
+      } else {
+        setAlocacaoParidade([]);
+      }
+
       setConfigSimulacao({
         aporteInicial: config.aporteInicial,
         aportesMensal: config.aportesMensal,
@@ -147,7 +178,12 @@ export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
         {modo === "aportes" && (
           <main style={{ flex: 1, padding: "20px" }}>
             {resultados.cdi || resultados.paridade ? (
-              <Grafico_aportes dados={resultados} config={configSimulacao}/>
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <Grafico_aportes dados={resultados} config={configSimulacao}/>
+                {marcados.includes("paridade") && alocacaoParidade.length > 0 ? (
+                  <GraficosParidade alocacao={alocacaoParidade} />
+                ) : null}
+              </div>
             ) : (
               <p style={{ color: "var(--texto-suave)" }}>
                 Os gráficos vão aparecer aqui

@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <script src="https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js" async />
       </head>

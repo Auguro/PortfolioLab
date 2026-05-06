@@ -109,9 +109,11 @@ export default function Grafico({ dados, config }: Props) {
           {/* Cards das estratégias */}
           {ESTRATEGIAS_CONFIG.map(({ id, label, cor }) => {
             const serie = dados[id as keyof typeof dados];
-            if (!serie) return null;
-            const retorno = serie[serie.length - 1].valor * 100;
-            const valorFinal = valorReferencia * (1 + serie[serie.length - 1].valor);
+            if (!serie || serie.length === 0) return null;
+            const ultimo = serie[serie.length - 1];
+            if (!ultimo || typeof ultimo.valor !== "number" || Number.isNaN(ultimo.valor)) return null;
+            const retorno = ultimo.valor * 100;
+            const valorFinal = valorReferencia * (1 + ultimo.valor);
             const positivo = retorno >= 0;
             return (
               <div key={id} style={{
