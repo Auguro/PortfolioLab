@@ -23,6 +23,7 @@ import { codigoEficiente } from "../estrategias/eficiente";
 import { codigoCDI_rentabilidade } from "../estrategias/cdi - Rentabilidade";
 import { codigoParidade_rentabilidade } from "../estrategias/paridade - Rentabilidade";
 import { codigoEficiente_rentabilidade } from "../estrategias/eficiente - Rentabilidade";
+import { codigoIngenua_rentabilidade } from "../estrategias/ingenua - Rentabilidade";
 
 interface Props {
   tickers: string[];
@@ -53,21 +54,23 @@ function normalizarAlocacao(raw: any): { data: string; pesos: Record<string, num
 
 export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
   const [painelAberto, setPainelAberto] = useState(false);
-  const [modo, setModo] = useState<"aportes" | "rentabilidade">("aportes");
+  const [modo, setModo] = useState<"aportes" | "rentabilidade">("rentabilidade");
   
   const [codigos, setCodigos] = useState({
     paridade:  modo === "aportes" ? codigoParidade : codigoParidade_rentabilidade,
     eficiente:  modo === "aportes" ? codigoEficiente : codigoEficiente_rentabilidade,
     cdi:  modo === "aportes" ? codigoCDI : codigoCDI_rentabilidade,
+    ingenua: codigoIngenua_rentabilidade,
   });
   useEffect(() => {
     setCodigos({
       paridade: modo === "aportes" ? codigoParidade : codigoParidade_rentabilidade,
       eficiente: modo === "aportes" ? codigoEficiente : codigoEficiente_rentabilidade,
       cdi: modo === "aportes" ? codigoCDI : codigoCDI_rentabilidade,
+      ingenua: codigoIngenua_rentabilidade,
     });
     // 🔽 LIMPA OS RESULTADOS ANTERIORES AO TROCAR DE MODO
-    setResultados({ cdi: null, paridade: null, eficiente: null });
+    setResultados({ cdi: null, paridade: null, eficiente: null, ingenua: null });
     setAlocacaoParidade([]);
   }, [modo]);
 
@@ -84,10 +87,12 @@ export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
     cdi: { data: string; valor: number }[] | null;
     paridade: { data: string; valor: number }[] | null;
     eficiente: { data: string; valor: number }[] | null;
+    ingenua: { data: string; valor: number }[] | null;
   }>({
     cdi: null,
     paridade: null,
     eficiente: null,
+    ingenua: null,
   });
   const [alocacaoParidade, setAlocacaoParidade] = useState<{ data: string; pesos: Record<string, number> }[]>([]);
 
@@ -120,6 +125,7 @@ export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
       data_fim: config.dataFim,
       aporte_inicial: config.aporteInicial,
       aporte_mensal: config.aportesMensal,
+      modo_retorno: "serie",
     };
 
     try {
@@ -134,14 +140,15 @@ export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
         cdi: { data: string; valor: number }[] | null;
         paridade: { data: string; valor: number }[] | null;
         eficiente: { data: string; valor: number }[] | null;
-      } = { cdi: null, paridade: null, eficiente: null };
+        ingenua: { data: string; valor: number }[] | null;
+      } = { cdi: null, paridade: null, eficiente: null, ingenua: null };
 
       marcados.forEach((id, i) => {
         novoResultado[id as keyof typeof novoResultado] = resultados[i];
       });
 
-      if (modo === "aportes" && marcados.includes("paridade")) {
-        const rawAlocacao = await executarPythonBruto(pyodideRef.current, codigoParidade, { ...variaveis, modo_retorno: "alocacao" });
+      if (marcados.includes("paridade")) {
+        const rawAlocacao = await executarPythonBruto(pyodideRef.current, codigos.paridade, { ...variaveis, modo_retorno: "alocacao" });
         setAlocacaoParidade(normalizarAlocacao(rawAlocacao));
       } else {
         setAlocacaoParidade([]);
@@ -163,7 +170,7 @@ export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
   return (
     <div style={{ minHeight: "100vh" }}>
       <Cabecalho painelAberto={painelAberto} setPainelAberto={setPainelAberto} />
-      <PainelEditores aberto={painelAberto} setPainelAberto={setPainelAberto} codigos={codigos} setCodigos={setCodigos} marcados={marcados} setMarcados={setMarcados} />
+      <PainelEditores aberto={painelAberto} setPainelAberto={setPainelAberto} codigos={codigos} setCodigos={setCodigos} marcados={marcados} setMarcados={setMarcados} modo={modo} />
       <div style={{ display: "flex" }}>
         <aside style={{ 
           width: "337.5px",
@@ -177,30 +184,23 @@ export default function PaginaPrincipal({ tickers, dados, cdi }: Props) {
 
         {modo === "aportes" && (
           <main style={{ flex: 1, padding: "20px" }}>
-            {resultados.cdi || resultados.paridade ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                <Grafico_aportes dados={resultados} config={configSimulacao}/>
-                {marcados.includes("paridade") && alocacaoParidade.length > 0 ? (
-                  <GraficosParidade alocacao={alocacaoParidade} />
-                ) : null}
-              </div>
-            ) : (
-              <p style={{ color: "var(--texto-suave)" }}>
-                Os gráficos vão aparecer aqui
-              </p>
-            )}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <Grafico_aportes dados={resultados} config={configSimulacao}/>
+              {marcados.includes("paridade") ? (
+                <GraficosParidade alocacao={alocacaoParidade} />
+              ) : null}
+            </div>
           </main>
         )}
 
         {modo === "rentabilidade" && (
           <main style={{ flex: 1, padding: "20px" }}>
-            {resultados.cdi || resultados.paridade ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <Grafico_rentabilidade dados={resultados} config={configSimulacao}/>
-            ) : (
-              <p style={{ color: "var(--texto-suave)" }}>
-                Os gráficos vão aparecer aqui
-              </p>
-            )}
+              {marcados.includes("paridade") ? (
+                <GraficosParidade alocacao={alocacaoParidade} />
+              ) : null}
+            </div>
           </main>
         )}
 

@@ -28,6 +28,7 @@ interface Props {
     cdi: Ponto[] | null;
     paridade: Ponto[] | null;
     eficiente: Ponto[] | null;
+    ingenua?: Ponto[] | null;
   };
   config: ConfigSimulacao | null;
 }
@@ -49,7 +50,7 @@ function calcularRetorno(serie: Ponto[], valorInvestido: number): number {
 }
 
 const ESTRATEGIAS_CONFIG = [
-  { id: "cdi",      label: "CDI",               cor: "var(--amarelo)" },
+  { id: "cdi",      label: "CDI",               cor: "var(--azul-claro)" },
   { id: "paridade", label: "Paridade de Risco",  cor: "var(--verde)"  },
   { id: "eficiente",label: "Carteira Eficiente", cor: "var(--azul)"   },
 ];
@@ -164,7 +165,7 @@ export default function Grafico({ dados, config }: Props) {
               contentStyle={{ background: "var(--fundo-card)", borderColor: "var(--borda)" }}
             />
             <Legend />
-            {dados.cdi      && <Line type="monotone" dataKey="cdi"       stroke="var(--amarelo)" name="CDI"               dot={false} />}
+            {dados.cdi      && <Line type="monotone" dataKey="cdi"       stroke="var(--azul-claro)"   name="CDI"               dot={false} />}
             {dados.paridade && <Line type="monotone" dataKey="paridade"  stroke="var(--verde)"   name="Paridade de Risco" dot={false} />}
             {dados.eficiente && <Line type="monotone" dataKey="eficiente" stroke="var(--azul)"    name="Carteira Eficiente" dot={false} />}
           </LineChart>

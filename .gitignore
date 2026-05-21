@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# LLM / agent assistants
+.claude/
+.cursor/
+.aider*
+CLAUDE.md

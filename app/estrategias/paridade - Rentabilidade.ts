@@ -25,6 +25,9 @@ data_fim_simulacao = pd.to_datetime(data_fim)
 # Lista que vai acumular os resultados diários {data, valor}
 resultado = []
 
+# Lista que vai acumular a alocação mensal {data, pesos} (usada pelos gráficos de paridade)
+alocacao_mensal = []
+
 # Fator de retorno acumulado — começa em 1.0 (representa 0% de retorno)
 retorno_acumulado = 1.0
 
@@ -173,6 +176,15 @@ for mes in pd.date_range(start=data_inicio_simulacao, end=data_fim_simulacao, fr
     if pesos_otimos is None:
         continue
 
+    # Registra a alocação do mês para alimentar os gráficos de paridade
+    pesos_ativos = {ativo: 0.0 for ativo in lista_ativos}
+    for i, ativo in enumerate(ativos_validos):
+        pesos_ativos[ativo] = float(pesos_otimos[i])
+    alocacao_mensal.append({
+        "data": data_rebalanceamento.strftime('%Y-%m-%d'),
+        "pesos": pesos_ativos
+    })
+
     # Dados diários do mês atual (limitado à data fim da simulação)
     inicio_mes = mes
     fim_mes = mes + pd.offsets.MonthEnd(0)
@@ -196,4 +208,4 @@ for mes in pd.date_range(start=data_inicio_simulacao, end=data_fim_simulacao, fr
             "valor": float(retorno_acumulado - 1)  # -1 para transformar em % (0.03 = 3%)
         })
 
-resultado`;
+(alocacao_mensal if ('modo_retorno' in globals() and modo_retorno == 'alocacao') else resultado)`;

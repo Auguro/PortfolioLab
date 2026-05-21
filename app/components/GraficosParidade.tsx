@@ -26,14 +26,14 @@ interface Props {
 const CORES = ["#22c55e", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16"];
 
 export default function GraficosParidade({ alocacao }: Props) {
-  if (!alocacao.length) return null;
+  const ultimo = alocacao.length > 0 ? alocacao[alocacao.length - 1] : null;
+  const ativos = ultimo ? Object.keys(ultimo.pesos) : [];
 
-  const ultimo = alocacao[alocacao.length - 1];
-  const ativos = Object.keys(ultimo.pesos);
-
-  const pieData = ativos
-    .map((ativo) => ({ name: ativo, value: (ultimo.pesos[ativo] ?? 0) * 100 }))
-    .filter((item) => item.value > 0);
+  const pieData = ultimo
+    ? ativos
+        .map((ativo) => ({ name: ativo, value: (ultimo.pesos[ativo] ?? 0) * 100 }))
+        .filter((item) => item.value > 0)
+    : [];
 
   const evolucaoData = alocacao.map((linha) => {
     const row: Record<string, string | number> = { data: linha.data };
@@ -55,7 +55,7 @@ export default function GraficosParidade({ alocacao }: Props) {
                   <Cell key={index} fill={CORES[index % CORES.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value: number) => `${value.toFixed(2)}%`} />
+              <Tooltip formatter={(value) => `${Number(value).toFixed(2)}%`} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
@@ -77,7 +77,7 @@ export default function GraficosParidade({ alocacao }: Props) {
                 }}
               />
               <YAxis stroke="var(--texto-suave)" domain={[0, 100]} />
-              <Tooltip formatter={(value: number) => `${value.toFixed(2)}%`} />
+              <Tooltip formatter={(value) => `${Number(value).toFixed(2)}%`} />
               <Legend />
               {ativos.map((ativo, index) => (
                 <Bar key={ativo} dataKey={ativo} stackId="a" fill={CORES[index % CORES.length]} />

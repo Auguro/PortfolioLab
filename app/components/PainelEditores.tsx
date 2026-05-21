@@ -5,10 +5,11 @@ import { useState } from "react";
 interface Props {
   aberto: boolean;
   setPainelAberto: (valor: boolean) => void;
-  codigos: { paridade: string; eficiente: string; cdi: string };
-  setCodigos: (codigos: { paridade: string; eficiente: string; cdi: string }) => void;
+  codigos: { paridade: string; eficiente: string; cdi: string; ingenua: string };
+  setCodigos: (codigos: { paridade: string; eficiente: string; cdi: string; ingenua: string }) => void;
   marcados: string[];
   setMarcados: (valor: string[]) => void;
+  modo: "aportes" | "rentabilidade";
 }
 
 const ESTRATEGIAS = [
@@ -23,10 +24,15 @@ const ESTRATEGIAS = [
   {
     id: "eficiente",
     titulo: "Carteira Eficiente"
+  },
+  {
+    id: "ingenua",
+    titulo: "Ingênua",
+    modos: ["rentabilidade"] as const,
   }
 ];
 
-export default function PainelEditores({ aberto, setPainelAberto, codigos, setCodigos, marcados, setMarcados }: Props) {
+export default function PainelEditores({ aberto, setPainelAberto, codigos, setCodigos, marcados, setMarcados, modo }: Props) {
   const [abertos, setAbertos] = useState<string[]>([]);
 
   function toggleEditor(id: string) {
@@ -75,7 +81,7 @@ export default function PainelEditores({ aberto, setPainelAberto, codigos, setCo
         </button>
       </div>
 
-      {ESTRATEGIAS.map((estrategia) => (
+      {ESTRATEGIAS.filter((e) => !("modos" in e) || (e.modos as readonly string[]).includes(modo)).map((estrategia) => (
         <div key={estrategia.id} style={{ border: "1px solid var(--borda)", borderRadius: "6px", overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "center"}}>
             
